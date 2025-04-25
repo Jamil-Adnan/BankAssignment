@@ -1,4 +1,8 @@
 
+using BankBlazor.API.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+
 namespace BankBlazor.API
 {
     public class Program
@@ -8,6 +12,8 @@ namespace BankBlazor.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddDbContext<BankBlazorContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
