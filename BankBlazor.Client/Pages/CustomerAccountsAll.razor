@@ -1,0 +1,44 @@
+﻿@page "/customers-all"
+@inject HttpClient Http
+@using BankBlazor.Client.Models
+
+<h3>Customer Accounts</h3>
+
+@if (customerAccounts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Account ID</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in customerAccounts)
+            {
+                <tr>
+                    <td>@item.FullName</td>
+                    <td>@item.AccountId</td>
+                    <td>@item.Balance</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CustomerAccountAllDto>? customerAccounts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetFromJsonAsync<PagedResult<CustomerAccountAllDto>>(
+            "api/customers/accounts?page=1&pageSize=25");
+
+        customerAccounts = response?.Items;
+    }
+}
