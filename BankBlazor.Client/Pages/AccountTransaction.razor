@@ -1,71 +1,72 @@
-﻿@* @page "/account-transaction"
+﻿@page "/account-transaction"
 @using BankBlazor.Client.Models
 @using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 
-<h3>Account Transaction</h3>
+<h3>account transaction</h3>
 
-<EditForm Model="transaction" OnValidSubmit="SubmitTransaction">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<editform model="transaction" onvalidsubmit="submittransaction">
+    <dataannotationsvalidator />
+    <validationsummary />
 
     <div class="form-group">
-        <label>Account Number:</label>
+        <label>account number:</label>
         <InputNumber @bind-Value="transaction.AccountId" class="form-control" />
-        <ValidationMessage For="() => transaction.AccountId" />
+        <validationmessage for="() => transaction.accountid" />
     </div>
 
     <div class="form-group mt-3">
-        <label>Transaction Type:</label>
+        <label>transaction type:</label>
         <InputRadioGroup @bind-Value="transaction.Operation" class="form-check">
+
             <div class="form-check">
-                <InputRadio TValue="string" class="form-check-input" Value="deposit" />
-                <label class="form-check-label">Deposit</label>
+                <inputradio tvalue="string" class="form-check-input" value="deposit" />
+                <label class="form-check-label">deposit</label>
             </div>
             <div class="form-check">
-                <InputRadio TValue="string" class="form-check-input" Value="withdraw" />
-                <label class="form-check-label">Withdraw</label>
+                <inputradio tvalue="string" class="form-check-input" value="withdraw" />
+                <label class="form-check-label">withdraw</label>
             </div>
         </InputRadioGroup>
-        <ValidationMessage For="() => transaction.Operation" />
+        <validationmessage for="() => transaction.operation" />
     </div>
 
 
     <div class="form-group mt-3">
-        <label>Amount:</label>
-        <InputNumber @bind-Value="transaction.Amount" step="0.01" class="form-control" />
-        <ValidationMessage For="() => transaction.Amount" />
+        <label>amount:</label>
+        <InputNumber @bind-value="transaction.Amount" step="0.01" class="form-control" />
+        <validationmessage for="() => transaction.amount" />
     </div>
 
     <div class="form-group mt-3">
-        <label>Symbol (optional):</label>
-        <InputText @bind-Value="transaction.Symbol" class="form-control" />
+        <label>symbol (optional):</label>
+        <InputText @bind-value="transaction.Symbol" class="form-control" />
     </div>
 
-    <button class="btn btn-primary mt-3" type="submit">Submit</button>
-</EditForm>
+    <button class="btn btn-primary mt-3" type="submit">submit</button>
+</editform>
 
-@if (showResult)
+@if (showresult)
 {
     <div class="alert alert-success mt-4">
-        ✅ Transaction successful. New balance: <strong>@newBalance.ToString("C")</strong>
+        ✅ transaction successful. new balance: <strong>@newbalance.ToString("c")</strong>
     </div>
 }
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (!string.IsNullOrEmpty(errormessage))
 {
-    <div class="alert alert-danger mt-4">@errorMessage</div>
+    <div class="alert alert-danger mt-4">@errormessage</div>
 }
 
 @code {
     private DepositWithdrawRequestDto transaction = new();
-    private decimal newBalance;
-    private bool showResult = false;
-    private string? errorMessage;
+    private decimal newbalance;
+    private bool showresult = false;
+    private string? errormessage;
 
-    private async Task SubmitTransaction()
+    private async Task submittransaction()
     {
-        showResult = false;
-        errorMessage = null;
+        showresult = false;
+        errormessage = null;
 
         try
         {
@@ -73,20 +74,19 @@
 
             if (response.IsSuccessStatusCode)
             {
-                newBalance = await response.Content.ReadFromJsonAsync<decimal>();
-                showResult = true;
+                newbalance = await response.Content.ReadFromJsonAsync<decimal>();
+                showresult = true;
                 transaction = new(); // reset form
             }
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                errorMessage = $"❌ Error: {error}";
+                errormessage = $"❌ error: {error}";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"❌ Unexpected error: {ex.Message}";
+            errormessage = $"❌ unexpected error: {ex.Message}";
         }
     }
 }
- *@
