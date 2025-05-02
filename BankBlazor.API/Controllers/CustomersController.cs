@@ -19,26 +19,8 @@ namespace BankBlazor.API.Controllers
         }
 
         // GET: api/customers  It is goin to get all the customers from the database
-        //[HttpGet("accounts")]
-        //public async Task<ActionResult<IEnumerable<CustomerAccountAllDto>>> GetAllCustomersWithAccounts()
-        //{
-        //    var customerAccounts = await _context.Dispositions
-        //        .Include(d => d.Customer)
-        //        .Include(d => d.Account)
-        //        .Where(d => d.Account != null && d.Customer != null)
-        //        .Select(d => new CustomerAccountAllDto
-        //        {
-        //            FullName = d.Customer.Givenname + " " + d.Customer.Surname,
-        //            AccountId = d.Account.AccountId,
-        //            Balance = d.Account.Balance
-        //        })
-        //        .ToListAsync();
-
-        //    return Ok(customerAccounts);
-        //}
-
-
-        [HttpGet("accounts")]
+        
+        [HttpGet("Show_all_accounts")]
         public async Task<ActionResult<PagedResult<CustomerAccountAllDto>>> GetAllCustomersWithAccounts(
     int page = 1, int pageSize = 10)
         {
@@ -69,7 +51,7 @@ namespace BankBlazor.API.Controllers
 
 
         // GET: api/customers/{id}  will fetch a specific customer with the id
-        [HttpGet("{id}/accounts")]
+        [HttpGet("{id}/info_by_account_number")]
         public async Task<ActionResult<CustomerAccountInfoDto>> GetCustomerWithAccounts(int id)
         {
             var customer = await _context.Customers
