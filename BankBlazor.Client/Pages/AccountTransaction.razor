@@ -56,6 +56,32 @@
 {
     <div class="alert alert-danger mt-4">@errormessage</div>
 }
+@if (recentTransactions.Any())
+{
+    <h5 class="mt-4">Recent Transactions</h5>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Operation</th>
+                <th>Amount</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var txn in recentTransactions)
+            {
+                <tr>
+                    <td>@txn.Date.ToString("g")</td>
+                    <td>@txn.Operation</td>
+                    <td>@txn.Amount.ToString("C")</td>
+                    <td>@txn.Balance.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 
 @code {
     private DepositWithdrawRequestDto transaction = new();
@@ -88,5 +114,27 @@
         {
             errormessage = $"❌ unexpected error: {ex.Message}";
         }
+
+        await LoadRecentTransactions(transaction.AccountId);
+
     }
+
+    private List<TransactionDto> recentTransactions = new();
+
+    private async Task LoadRecentTransactions(int accountId)
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<TransactionDto>>($"api/transactions/recent/{accountId}");
+            if (response != null)
+            {
+                recentTransactions = response;
+            }
+        }
+        catch
+        {
+            // Optional: handle errors
+        }
+    }
+
 }
