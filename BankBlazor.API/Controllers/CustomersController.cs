@@ -47,41 +47,11 @@ namespace BankBlazor.API.Controllers
                 Items = customerAccounts
             });
         }
-
-
-
-
-        // GET: api/customers/{id}  will fetch a specific customer with the id
-        [HttpGet("{id}/info_by_account_number")]
-        public async Task<ActionResult<CustomerAccountInfoDto>> GetCustomerWithAccounts(int id)
+        
+        public class PagedResult<T>
         {
-            var customer = await _context.Customers
-                .Include(c => c.Dispositions)
-                    .ThenInclude(d => d.Account)
-                .FirstOrDefaultAsync(c => c.CustomerId == id);
-
-            if (customer == null)
-                return NotFound();
-
-            var dto = new CustomerAccountInfoDto
-            {
-                FullName = $"{customer.Givenname} {customer.Surname}",
-                Accounts = customer.Dispositions
-                    .Where(d => d.Account != null)
-                    .Select(d => new AccountDto
-                    {
-                        AccountId = d.Account.AccountId,
-                        Balance = d.Account.Balance
-                    }).ToList()
-            };
-
-            return Ok(dto);
+            public int TotalCount { get; set; }
+            public List<T> Items { get; set; } = new();
         }
-    }
-
-    public class PagedResult<T>
-    {
-        public int TotalCount { get; set; }
-        public List<T> Items { get; set; } = new();
     }
 }

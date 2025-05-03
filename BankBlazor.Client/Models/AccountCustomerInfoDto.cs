@@ -1,6 +1,6 @@
-﻿namespace BankBlazor.API.DTO
+﻿namespace BankBlazor.Client.Models
 {
-    public class CustomerAccountInfoDto
+    public class AccountCustomerInfoDto
     {
         public int CustomerId { get; set; }
         public string FullName { get; set; }

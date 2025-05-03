@@ -12,20 +12,28 @@
     <h2>Hello Admin! The next Scottish bank holiday is <strong>{holiday}</strong> on <strong>{date}</strong></h2>
 </section>
 
-<section>
-    <h3>Welcome to the Bank App</h3>
-
+<section>    
     <button @onclick="NavigateToAccounts">View Customer Accounts</button>
 
     @code {
         [Inject] NavigationManager Nav { get; set; }
-
         void NavigateToAccounts()
         {
             Nav.NavigateTo("/show_all_accounts");
         }
     }
+</section>
 
+<section>    
+    <button @onclick="NavigateByAccountNumber">Info By Account ID</button>
+
+    @code {
+        [Inject] NavigationManager Navi { get; set; }
+        void NavigateByAccountNumber()
+        {
+            Navi.NavigateTo("/account-details");
+        }
+    }
 </section>
 
 <section>
