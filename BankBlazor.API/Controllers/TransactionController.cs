@@ -54,17 +54,6 @@ namespace BankBlazor.API.Controllers
             return Ok(account.Balance);
         }
 
-        [HttpGet("transaction_history/{accountId}")]
-        public async Task<ActionResult<List<Transaction>>> GetRecentTransactions(int accountId)
-        {
-            var transactions = await _context.Transactions
-                .Where(t => t.AccountId == accountId)
-                .OrderByDescending(t => t.Date)
-                .Take(5)
-                .ToListAsync();
-
-            return Ok(transactions);
-        }
 
         [HttpPost("account_transfer")]
         public async Task<ActionResult<decimal>> TransferMoney(TransferRequestDto request)
