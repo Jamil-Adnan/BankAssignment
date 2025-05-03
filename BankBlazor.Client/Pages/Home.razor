@@ -49,6 +49,18 @@
 </section>
 
 <section>
+    <button @onclick="NavigateToWireTransfer">Account Transfer</button>
+
+    @code {
+        [Inject] NavigationManager Nav3 { get; set; }
+        void NavigateToWireTransfer()
+        {
+            Nav3.NavigateTo("/account_transfer");
+        }
+    }
+</section>
+
+<section>
     <NavLink href="/account-transaction">
         Account Transaction
     </NavLink>

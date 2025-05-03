@@ -1,0 +1,143 @@
+﻿@page "/account_transfer"
+@using BankBlazor.Client.Models
+@inject HttpClient Http
+
+<h3>Money Transfer</h3>
+
+<div class="mb-3">
+    <label for="senderAccountIdInput" class="form-label">Sender Account ID:</label>
+    <input type="number" id="senderAccountIdInput" class="form-control" @bind="senderAccountId" min="1" />
+    <button class="btn btn-primary mt-2" @onclick="FetchSenderBalance" disabled="@(!senderAccountId.HasValue || senderAccountId <= 0)">Check Sender Balance</button>
+</div>
+
+@if (senderBalance.HasValue)
+{
+    <div class="mb-3">
+        <p>Sender Current Balance: @senderBalance.Value</p>
+        <label for="receiverAccountIdInput" class="form-label">Receiver Account ID:</label>
+        <input type="number" id="receiverAccountIdInput" class="form-control" @bind="receiverAccountId" min="1" />
+        <label for="amountInput" class="form-label">Amount to Transfer:</label>
+        <input type="number" id="amountInput" class="form-control" @bind="amount" min="0.01" step="0.01" />
+        <button class="btn btn-primary mt-2" @onclick="ProcessTransfer" disabled="@(!IsValidTransfer() || isProcessing)">Transfer</button>
+    </div>
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+}
+
+<!-- Link back to homepage -->
+<div class="mt-3">
+    <a href="/" class="btn btn-link">Back to Home</a>
+</div>
+
+@code {
+    private int? senderAccountId;
+    private int? receiverAccountId;
+    private decimal? senderBalance;
+    private decimal? amount;
+    private string? successMessage;
+    private string? errorMessage;
+    private bool isProcessing;
+
+    private async Task FetchSenderBalance()
+    {
+        if (senderAccountId.HasValue && senderAccountId > 0)
+        {
+            try
+            {
+                var response = await Http.GetAsync($"api/accounts/{senderAccountId.Value}/customer-info");
+                if (response.IsSuccessStatusCode)
+                {
+                    var accountInfo = await response.Content.ReadFromJsonAsync<AccountCustomerInfoDto>();
+                    senderBalance = accountInfo?.Balance;
+                    errorMessage = null;
+                    successMessage = null;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    senderBalance = null;
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    senderBalance = null;
+                    errorMessage = "An error occurred while fetching sender balance.";
+                }
+            }
+            catch (Exception)
+            {
+                senderBalance = null;
+                errorMessage = "An error occurred while fetching sender balance.";
+            }
+        }
+    }
+
+    private bool IsValidTransfer()
+    {
+        if (!senderBalance.HasValue || !receiverAccountId.HasValue || !amount.HasValue || amount <= 0)
+            return false;
+
+        if (amount > senderBalance)
+            return false;
+
+        if (receiverAccountId <= 0)
+            return false;
+
+        return true;
+    }
+
+    private async Task ProcessTransfer()
+    {
+        if (IsValidTransfer() && !isProcessing)
+        {
+            isProcessing = true;
+            try
+            {
+                var request = new
+                {
+                    SenderAccountId = senderAccountId.Value,
+                    ReceiverBank = "Internal", // Adjust as needed
+                    ReceiverAccountId = receiverAccountId.Value,
+                    Amount = amount.Value
+                };
+                var response = await Http.PostAsJsonAsync("api/transactions/account_transfer", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    successMessage = await response.Content.ReadAsStringAsync();
+                    errorMessage = null;
+                    // Fetch the updated sender balance
+                    var balanceResponse = await Http.GetAsync($"api/accounts/{senderAccountId.Value}/customer-info");
+                    if (balanceResponse.IsSuccessStatusCode)
+                    {
+                        var accountInfo = await balanceResponse.Content.ReadFromJsonAsync<AccountCustomerInfoDto>();
+                        senderBalance = accountInfo?.Balance;
+                    }
+                    // Clear form fields except senderBalance
+                    senderAccountId = null;
+                    receiverAccountId = null;
+                    amount = null;
+                }
+                else
+                {
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                    successMessage = null;
+                }
+            }
+            catch (Exception)
+            {
+                errorMessage = "An error occurred while processing the transfer.";
+                successMessage = null;
+            }
+            finally
+            {
+                isProcessing = false;
+            }
+        }
+    }
+}
