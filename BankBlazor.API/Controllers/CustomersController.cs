@@ -19,34 +19,35 @@ namespace BankBlazor.API.Controllers
         }
 
         // GET: api/customers  It is goin to get all the customers from the database
-        
-        [HttpGet("Show_all_accounts")]
-        public async Task<ActionResult<PagedResult<CustomerAccountAllDto>>> GetAllCustomersWithAccounts(
-    int page = 1, int pageSize = 10)
+
+        [HttpGet("show_all_accounts")]
+        public async Task<ActionResult<PagedResult<CustomerAccountAllDto>>> GetAllAccounts(int page = 1, int pageSize = 25)
         {
-            var query = _context.Dispositions
+            var customerAccounts = await _context.Dispositions
                 .Include(d => d.Customer)
                 .Include(d => d.Account)
-                .Where(d => d.Account != null && d.Customer != null)
+                .Where(d => d.Type == "OWNER") // Only include account owners, not all dispositions
                 .Select(d => new CustomerAccountAllDto
                 {
                     FullName = d.Customer.Givenname + " " + d.Customer.Surname,
                     AccountId = d.Account.AccountId,
                     Balance = d.Account.Balance
-                });
-
-            var totalCount = await query.CountAsync();
-            var items = await query
+                })
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+            var totalCount = await _context.Dispositions
+                .Where(d => d.Type == "OWNER")
+                .CountAsync();
+
             return Ok(new PagedResult<CustomerAccountAllDto>
             {
                 TotalCount = totalCount,
-                Items = items
+                Items = customerAccounts
             });
         }
+
 
 
 
