@@ -61,32 +61,20 @@
 </section>
 
 <section>
-    <NavLink href="/account-transaction">
-        Account Transaction
-    </NavLink>
-    <NavLink href="/transfer">Bank Transfer</NavLink>
+    <button @onclick="NavigateToHistory">Transaction History</button>
 
+    @code {
+        [Inject] NavigationManager Nav4 { get; set; }
+        void NavigateToHistory()
+        {
+            Nav4.NavigateTo("/transaction-history-view");
+        }
+    }
 </section>
 
 
-@* <section id="dashboard" class="container">
-    <h2>Customer Dashboard</h2>
-    <div class="info">
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>Email:</strong> johndoe@email.com</p>
-        <p><strong>Phone:</strong> +1234567890</p>
-    </div>
-</section>
 
-<section id="transactions" class="container">
-    <h2>Account Transactions</h2>
-    <div class="account">
-        <p><strong>Account Number:</strong> 123456789</p>
-        <p><strong>Balance:</strong> $5,000</p>
-    </div>
-    <button>Deposit</button>
-    <button>Withdraw</button>
-    <button>Transfer</button>
-</section> *@
+
+
 
 
