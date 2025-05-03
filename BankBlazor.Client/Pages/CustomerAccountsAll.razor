@@ -30,15 +30,34 @@ else
         </tbody>
     </table>
 }
+@if (!string.IsNullOrEmpty(loadError))
+{
+    <div class="alert alert-danger">@loadError</div>
+}
 
 @code {
     private List<CustomerAccountAllDto>? customerAccounts;
+    private string? loadError;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await Http.GetFromJsonAsync<PagedResult<CustomerAccountAllDto>>(
-            "api/customers/accounts?page=1&pageSize=25");
+        try
+        {
+            var response = await Http.GetFromJsonAsync<PagedResult<CustomerAccountAllDto>>(
+                "api/customers/accounts?page=1&pageSize=25");
 
-        customerAccounts = response?.Items;
+            if (response?.Items != null)
+            {
+                customerAccounts = response.Items;
+            }
+            else
+            {
+                loadError = "No data returned.";
+            }
+        }
+        catch (Exception ex)
+        {
+            loadError = $"❌ Failed to load accounts: {ex.Message}";
+        }
     }
 }
