@@ -28,10 +28,22 @@
     <button @onclick="NavigateByAccountNumber">Info By Account ID</button>
 
     @code {
-        [Inject] NavigationManager Navi { get; set; }
+        [Inject] NavigationManager Nav1 { get; set; }
         void NavigateByAccountNumber()
         {
-            Navi.NavigateTo("/account-details");
+            Nav1.NavigateTo("/account-details");
+        }
+    }
+</section>
+
+<section>    
+    <button @onclick="NavigateToDepositWithdraw">Cash Deposit or Withdraw</button>
+
+    @code {
+        [Inject] NavigationManager Nav2 { get; set; }
+        void NavigateToDepositWithdraw()
+        {
+            Nav2.NavigateTo("/deposit_withdraw");
         }
     }
 </section>

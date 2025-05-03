@@ -1,0 +1,269 @@
+﻿@page "/deposit_withdraw"
+@using BankBlazor.Client.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+
+<h3>Transaction Processing</h3>
+
+<div class="mb-3">
+    <label for="accountIdInput" class="form-label">Enter Account ID:</label>
+    <input type="number" id="accountIdInput" class="form-control" @bind="accountId" min="1" />
+    <button class="btn btn-primary mt-2" @onclick="FetchBalance" disabled="@(!accountId.HasValue || accountId <= 0)">Check Balance</button>
+</div>
+
+@if (currentBalance.HasValue)
+{
+    <div class="mb-3">
+        <p>Current Balance: @currentBalance.Value</p>
+        <div>
+            <label class="form-check-label">
+                <input type="radio" class="form-check-input" name="operation" value="deposit" checked="@(operation == "deposit")" @onchange="@(() => operation = "deposit")" /> Deposit
+            </label>
+            <label class="form-check-label ms-3">
+                <input type="radio" class="form-check-input" name="operation" value="withdraw" checked="@(operation == "withdraw")" @onchange="@(() => operation = "withdraw")" /> Withdraw
+            </label>
+        </div>
+        <label for="amountInput" class="form-label">Amount:</label>
+        <input type="number" id="amountInput" class="form-control" @bind="amount" min="0.01" step="0.01" />
+        <button class="btn btn-primary mt-2" @onclick="ProcessTransaction" disabled="@(!IsValidTransaction() || isProcessing)">Submit Transaction</button>
+    </div>
+
+    @if (transactionResult != null)
+    {
+        <div class="alert alert-success">Transaction completed. New Balance: @transactionResult</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+}
+
+<!-- Link back to homepage -->
+<div class="mt-3">
+    <a href="/" class="btn btn-link">Back to Home</a>
+</div>
+
+@code {
+    private int? accountId;
+    private decimal? currentBalance;
+    private string? operation = "deposit"; // Default to deposit
+    private decimal? amount;
+    private decimal? transactionResult;
+    private string? errorMessage;
+    private bool isProcessing;
+
+    private async Task FetchBalance()
+    {
+        if (accountId.HasValue && accountId > 0)
+        {
+            try
+            {
+                var response = await Http.GetAsync($"api/accounts/{accountId.Value}/customer-info");
+                if (response.IsSuccessStatusCode)
+                {
+                    var accountInfo = await response.Content.ReadFromJsonAsync<AccountCustomerInfoDto>();
+                    currentBalance = accountInfo?.Balance;
+                    errorMessage = null;
+                    transactionResult = null;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    currentBalance = null;
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    currentBalance = null;
+                    errorMessage = "An error occurred while fetching balance.";
+                }
+            }
+            catch (Exception)
+            {
+                currentBalance = null;
+                errorMessage = "An error occurred while fetching balance.";
+            }
+        }
+    }
+
+    private bool IsValidTransaction()
+    {
+        if (!currentBalance.HasValue || string.IsNullOrEmpty(operation) || !amount.HasValue || amount <= 0)
+            return false;
+
+        if (operation == "withdraw" && amount > currentBalance)
+            return false;
+
+        return true;
+    }
+
+    private async Task ProcessTransaction()
+    {
+        if (IsValidTransaction() && !isProcessing)
+        {
+            isProcessing = true;
+            try
+            {
+                var request = new
+                {
+                    AccountId = accountId.Value,
+                    Amount = amount.Value,
+                    Operation = operation,
+                    Symbol = "" // Optional, can be customized
+                };
+                var response = await Http.PostAsJsonAsync("api/transactions/deposit_withdraw", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    transactionResult = await response.Content.ReadFromJsonAsync<decimal>();
+                    errorMessage = null;
+                    // Clear form after successful transaction
+                    accountId = null;
+                    currentBalance = transactionResult;
+                    operation = "deposit"; // Reset to default
+                    amount = null;
+                }
+                else
+                {
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                    transactionResult = null;
+                }
+            }
+            catch (Exception)
+            {
+                errorMessage = "An error occurred while processing the transaction.";
+                transactionResult = null;
+            }
+            finally
+            {
+                isProcessing = false;
+            }
+        }
+    }
+}
+
+
+
+@* <h3>Transaction Processing</h3>
+
+<div class="mb-3">
+    <label for="accountIdInput" class="form-label">Enter Account ID:</label>
+    <input type="number" id="accountIdInput" class="form-control" @bind="accountId" min="1" />
+    <button class="btn btn-primary mt-2" @onclick="FetchBalance" disabled="@(!accountId.HasValue || accountId <= 0)">Check Balance</button>
+</div>
+
+@if (currentBalance.HasValue)
+{
+    <div class="mb-3">
+        <p>Current Balance: @currentBalance.Value</p>
+        <div>
+            <label class="form-check-label">
+                <input type="radio" class="form-check-input" name="operation" value="deposit" checked="@(operation == "deposit")" @onchange="@(() => operation = "deposit")" /> Deposit
+            </label>
+            <label class="form-check-label ms-3">
+                <input type="radio" class="form-check-input" name="operation" value="withdraw" checked="@(operation == "withdraw")" @onchange="@(() => operation = "withdraw")" /> Withdraw
+            </label>
+        </div>
+        <label for="amountInput" class="form-label">Amount:</label>
+        <input type="number" id="amountInput" class="form-control" @bind="amount" min="0.01" step="0.01" />
+        <button class="btn btn-primary mt-2" @onclick="ProcessTransaction" disabled="@(!IsValidTransaction())">Submit Transaction</button>
+    </div>
+
+    @if (transactionResult != null)
+    {
+        <div class="alert alert-success">Transaction completed. New Balance: @transactionResult</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+}
+
+<!-- Link back to homepage -->
+<div class="mt-3">
+    <a href="/" class="btn btn-link">Back to Home</a>
+</div>
+
+@code {
+    private int? accountId;
+    private decimal? currentBalance;
+    private string? operation = "deposit"; // Default to deposit
+    private decimal? amount;
+    private decimal? transactionResult;
+    private string? errorMessage;
+
+    private async Task FetchBalance()
+    {
+        if (accountId.HasValue && accountId > 0)
+        {
+            try
+            {
+                var response = await Http.GetAsync($"api/accounts/{accountId.Value}/customer-info");
+                if (response.IsSuccessStatusCode)
+                {
+                    var accountInfo = await response.Content.ReadFromJsonAsync<AccountCustomerInfoDto>();
+                    currentBalance = accountInfo?.Balance;
+                    errorMessage = null;
+                    transactionResult = null;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    currentBalance = null;
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    currentBalance = null;
+                    errorMessage = "An error occurred while fetching balance.";
+                }
+            }
+            catch (Exception)
+            {
+                currentBalance = null;
+                errorMessage = "An error occurred while fetching balance.";
+            }
+        }
+    }
+
+    private bool IsValidTransaction()
+    {
+        if (!currentBalance.HasValue || string.IsNullOrEmpty(operation) || !amount.HasValue || amount <= 0)
+            return false;
+
+        if (operation == "withdraw" && amount > currentBalance)
+            return false;
+
+        return true;
+    }
+
+    private async Task ProcessTransaction()
+    {
+        if (IsValidTransaction())
+        {
+            try
+            {
+                var request = new
+                {
+                    AccountId = accountId.Value,
+                    Amount = amount.Value,
+                    Operation = operation,
+                    Symbol = "" // Optional, can be customized
+                };
+                var response = await Http.PostAsJsonAsync("api/transactions/deposit_withdraw", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    transactionResult = await response.Content.ReadFromJsonAsync<decimal>();
+                    errorMessage = null;
+                }
+                else
+                {
+                    errorMessage = await response.Content.ReadAsStringAsync();
+                    transactionResult = null;
+                }
+            }
+            catch (Exception)
+            {
+                errorMessage = "An error occurred while processing the transaction.";
+                transactionResult = null;
+            }
+        }
+    }
+} *@
