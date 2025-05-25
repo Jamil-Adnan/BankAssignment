@@ -1,5 +1,6 @@
 ﻿@page "/"
-@inject BankBlazor.Client.Services.HolidayService HolidayService
+@using BankBlazor.Client.Services
+@inject HolidayService HolidayService
 <PageTitle>Home</PageTitle>
 
 <section class="hero-container">
@@ -9,7 +10,30 @@
 </section>
 
 <section id="greeting" class="container">
-    <h2>Hello Admin! The next Scottish bank holiday is <strong>@holiday</strong> on <strong>@date</strong></h2>
+    <h2>
+        Hello Admin! The next Scottish bank holiday is
+        <strong>@holiday</strong> on <strong>@date</strong>
+    </h2>
+
+    @code {
+        private string holiday = "loading...";
+        private string date = "";
+
+        protected override async Task OnInitializedAsync()
+        {
+            var next = await HolidayService.GetNextHolidayAsync();
+            if (next != null)
+            {
+                holiday = next.Title;
+                date = DateTime.Parse(next.Date).ToString("dddd, dd MMMM yyyy");
+            }
+            else
+            {
+                holiday = "not found";
+                date = "";
+            }
+        }
+    }
 </section>
 
 <section>    
@@ -71,20 +95,9 @@
         }
     }
 </section>
-@code {
-    private string holiday = "";
-    private string date = "";
 
-    protected override async Task OnInitializedAsync()
-    {
-        var nextHoliday = await HolidayService.GetNextHolidayAsync();
-        if (nextHoliday != null)
-        {
-            holiday = nextHoliday.Title;
-            date = nextHoliday.Date;
-        }
-    }
-}
+
+
 
 }
 
