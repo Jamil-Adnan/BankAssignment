@@ -14,10 +14,20 @@ namespace BankBlazor.Client.Services
 
         public async Task<HolidayEvent?> GetNextHolidayAsync()
         {
-            var response = await _http.GetFromJsonAsync<BankHolidayResponse>(
-                "https://www.gov.uk/bank-holidays/scotland.json");
+            // API returnează un obiect care conține "england-and-wales", "scotland", "northern-ireland"
+            var data = await _http.GetFromJsonAsync<Dictionary<string, BankHolidayResponse>>("https://www.gov.uk/bank-holidays.json");
 
-            return response?.Events?.OrderBy(e => DateTime.Parse(e.Date)).FirstOrDefault();
+            if (data != null && data.TryGetValue("scotland", out var scotland))
+            {
+                var nextHoliday = scotland.Events
+                    .Where(e => DateTime.Parse(e.Date) > DateTime.Now)
+                    .OrderBy(e => DateTime.Parse(e.Date))
+                    .FirstOrDefault();
+
+                return nextHoliday;
+            }
+
+            return null;
         }
     }
 
